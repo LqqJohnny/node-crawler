@@ -16,6 +16,9 @@
     "superagent": "^3.5.2"
   },
   "devDependencies": {
+    "node-progress": "^0.1.0",
+    "progress": "^2.0.0",
+    "superagent-progress": "^0.0.3",
     "superagent-proxy": "^1.0.2"
   }
 }
