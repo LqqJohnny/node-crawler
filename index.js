@@ -7,6 +7,11 @@ var mkdirp = require('mkdirp');
 var request = require("request");
 console.log('爬虫程序开始运行......');
 
+
+var out = process.stdout;
+var passedLength = 0;
+var lastSize = 0;
+var startTime = Date.now();
 // 爬去地址
 var  list_url="http://qingru806.lofter.com/post/1de27885_10ec6e91";
 //本地存储目录
@@ -32,26 +37,42 @@ function getData(url){
                 // 就可以得到一个实现了 jquery 接口的变量，我们习惯性地将它命名为 `$`
                 // 剩下就都是 jquery 的内容了
                 var $ = cheerio.load(sres.text,{decodeEntities: false});
-                console.log($('.post_container .post_media_photo').length);
                 $('.ctc .pic img').each(function (idx, element) {
                     var src = $(this).attr('src');
-                    console.log('正在下载' + src);
-                    download(src, dir, Math.floor(Math.random()*100000) + '.' +src.substr(-3,3));
-                    console.log('下载完成');
+                    var filename = Math.floor(Math.random()*100000) + '.' +src.substr(-3,3);
+                    console.log('正在下载--' + filename);
+                    download(src, dir, filename);
                 });
         })
 }
 
 //下载方法
 var download = function(url, dir, filename){
-	request.head(url, function(err, res, body){
-        console.log(res);
-		request(url).pipe(fs.createWriteStream(dir + "/" + filename));
-	}).set('Content-Type', 'application/json')
-    ;
+        // var totalSize = res.caseless.dict['content-length'];
+        // showDownInfo(totalSize);
+		request(url).pipe(fs.createWriteStream(dir + "/" + filename)).on("upgrade",function(){
+            console.log("加载中");
+        });
 };
 
+function showDownInfo(totalSize){
+    var timer = setTimeout(function show() {
+        var percent = Math.ceil((passedLength / totalSize) * 100);
+        var size = Math.ceil(passedLength / 1000000);
+        var diff = size - lastSize;
+        lastSize = size;
+        out.clearLine();
+        out.cursorTo(0);
+        out.write('已完成' + size + 'MB, ' + percent + '%, 速度：' + diff * 2 + 'MB/s');
+        if (passedLength < totalSize) {
+            setTimeout(show, 500);
+        } else {
+            var endTime = Date.now();
+            console.log('共用时：' + (endTime - startTime) / 1000 + '秒。');
+        }
+    }, 500);
 
+}
 
 
 
